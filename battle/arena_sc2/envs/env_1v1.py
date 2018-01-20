@@ -8,7 +8,7 @@ from pysc2 import run_configs
 from s2clientprotocol import common_pb2 as sc_common
 from s2clientprotocol import sc2api_pb2 as sc_pb
 
-from battle.arena_sc2.envs.simple_env import SingleEnv
+from battle.arena_sc2.envs.single_env import SingleEnv
 
 class Battle1V1Env:
   def __init__(self,
