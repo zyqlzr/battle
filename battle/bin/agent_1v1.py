@@ -6,15 +6,21 @@ import battle.arena_sc2.envs
 
 from absl import flags
 from absl import app
+import time
 
-def run_agent_vs_builtin(unused_argv):
+
+def run_agent_vs_agent(unused_argv):
   print("all register id=", ids())
-  sc2_battle = make('AgentVSBuiltIn')
-  sc2_battle.register_agent(SC2WrapperAgent(make('RandomAgent')))
-  sc2_battle.register_env(make('sc2env'))
-  sc2_battle.play_game()
-  print(sc2_battle.stat)
+  agents = [make('NoopAgent') for _ in range(2)]
+
+  sc2_battle = make('Battle1V1')
+  print("**register agent**")
+  sc2_battle.register_agent(agents)
+  print("**register env**")
+  print("**play game**")
+  sc2_battle.play_n(500)
+  time.sleep(20)
 
 if __name__ == '__main__':
-  app.run(run_agent_vs_builtin)
+  app.run(run_agent_vs_agent)
 
