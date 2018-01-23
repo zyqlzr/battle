@@ -31,21 +31,21 @@ class SC2AgentVSBuildIn(ArenaSC2):
 
     self._inner_run([self._agent], self._env, None, 1)
 
-  def play_n(self, n: int):
+  def play_n(self, n):
     if self._env is None or self._agent is None:
       logging.error("env or agent is None") 
       return
 
     self._inner_run([self._agent], self._env, n, 1)
 
-  def play_episodes(self, episode_num: int):
+  def play_episodes(self, episode_num):
     if self._env is None or self._agent is None:
       logging.error("env or agent is None") 
       return
 
     self._inner_run([self._agent], self._env, None, episode_num)
 
-  def register_agent(self, new_agent : Agent):
+  def register_agent(self, new_agent):
     if self._agent is None:
       self._agent = new_agent.get_sc2_agent()
     else:

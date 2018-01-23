@@ -18,7 +18,6 @@ from absl import logging
 import time
 import threading
 import portpicker
-import asyncio
 
 GAME_NUM_1V1 = 2
 
@@ -357,40 +356,4 @@ class Battle1V1:
   @staticmethod
   def setup_multi_agent_game(env):
     env.reset_no_return()
-
-async def run_game_asyncio(thread_id, agent, env, max_step, save_replay=False):
-  print('thread-{} enter run_team'.format(thread_id))
-  total_step = 0
-  start_time = time.time()
-
-  win = False
-  try:
-    """episode loop """
-    timesteps = env.reset()
-    print('after reset')
-    while True:
-      total_step += 1
-      print("--thread-{} step={}--".format(thread_id, total_step))
-      actions = [agent.step(timestep) for timestep in timesteps]
-      timesteps = env.step(actions)
-
-      if max_step and total_step >= max_step:
-        break
-
-      if timesteps[0].last():
-        total_episode += 1
-        if timesteps[0].reward > 0:
-          win = True
-        else:
-          None
-        break
-  except KeyboardInterrupt:
-    print("thread-{} SC2_1V1 exception".format(thread_id))
-  finally:
-    end_time = time.time() - start_time
-  print("thread-{} exit, game over, result={}".format(thread_id, win))
-  if save_replay:
-    env.save_replay()
-  env.close()
-
 
