@@ -288,4 +288,36 @@ class SingleEnv(environment.Base):
   def first_step(self):
     return self._step()
 
+  @property
+  def host(self):
+    return self._host
 
+  def reset_launch(self):
+    print('---SingleEnv reset---, host=', self._host)
+    self._run_config, self._controller= self._parent.launch()
+    if self._host:
+      create = self._parent.create_req(self._run_config)
+      print("--create_pb--, uuid=", self._uid)
+      self.controller.create_game(create)
+
+  def reset_join(self):
+    if self._host:
+      print('--host join multi-player game--, uuid=', self._uid)
+      hjrsp = self.controller.join_game(self._parent.host_join_req())
+      print('--host join response:--, uuid=', self._uid)
+    else:
+      print('--client join multi-player game--, uuid=', self._uid)
+      cjrsp = self.controller.join_game(self._parent.client_join_req())
+      print('--client join response:--, uuid=', self._uid)
+
+    self._controllers = self._parent.env_controllers()
+    self._num_players = 2
+    self._game_info = self.controller.game_info()
+    print("get game_info, uuid=", self._uid)
+    self._obs = None
+    self._state = environment.StepType.LAST  # Want to jump to `reset`.
+    self.feature()
+    #self.renderer()
+
+    self._last_score = [0] * 2
+    self._state = environment.StepType.FIRST

@@ -26,5 +26,5 @@ class NoopAgent(base_agent.BaseAgent):
   """A random agent for starcraft."""
 
   def step(self, obs):
-    super(NoopAgent, self).step(obs)
+    #super(NoopAgent, self).step(obs)
     return actions.FunctionCall(0, [])

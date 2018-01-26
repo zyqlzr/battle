@@ -21,7 +21,9 @@ import portpicker
 
 GAME_NUM_1V1 = 2
 
-SEMAPHORE = threading.BoundedSemaphore(1)
+HOST_CREATE = threading.Event()
+CLIENT_JOIN = threading.Event()
+HOST_JOIN = threading.Event()
 
 class Battle1V1:
   def __init__(self,
@@ -127,14 +129,6 @@ class Battle1V1:
                        game_steps_per_episode=self.episode_length(),
                        **self._kwargs)
     self._envs = [host, client]
-
-  def _setup_game_test(self):
-    self._load_maps()
-    run_config, controller = self._launch_gamecores()
-    create = self.create_req(run_config)
-    join = self.host_join_req()
-    controller.create_game(create)
-    controller.join_game(join)
 
   def _load_maps(self):
     self._map = maps.get(self._map_name)
@@ -305,6 +299,75 @@ class Battle1V1:
     if save_replay:
       env.save_replay()
     env.close()
+
+  @staticmethod
+  def run_team_sequence(thread_id, agent, env, max_step, save_replay=False):
+    print('thread-{} enter run_team'.format(thread_id))
+    total_step = 0
+    start_time = time.time()
+
+    win = False
+    try:
+      """episode loop """
+      print('setup game by run_team')
+      env.reset_launch()
+      if env.host:
+        print('host create game, thread-{}'.format(thread_id))
+        HOST_CREATE.set()
+        HOST_JOIN.set()
+        env.reset_join()
+        print('host wait for client join, thread-{}'.format(thread_id))
+        CLIENT_JOIN.wait()
+        print('host and client all join, thread-{}'.format(thread_id))
+      else:
+        HOST_CREATE.wait()
+        print('client know the game create, thread-{}'.format(thread_id))
+        CLIENT_JOIN.set()
+        env.reset_join()
+        print('client wait for host create, thread-{}'.format(thread_id))
+        HOST_JOIN.wait()
+        print('client and host all join, thread-{}'.format(thread_id))
+      print('after reset and first step, thread-{}'.format(thread_id))
+      #SEMAPHORE.acquire()
+      timesteps = env.first_step()
+      #actions = [agent.step(timestep) for timestep in timesteps]
+      #timesteps = env.step(actions)
+      print('end reset and first step, thread-{}'.format(thread_id))
+      #SEMAPHORE.release()
+      if env.host:
+        print('host finish first action,thread-{}'.format(thread_id))
+      else:
+        print('client finish first action,thread-{}'.format(thread_id))
+
+      while True:
+        total_step += 1
+        print("--thread-{} step={}--".format(thread_id, total_step))
+        #SEMAPHORE.acquire()
+        actions = [agent.step(timestep) for timestep in timesteps]
+        timesteps = env.step(actions)
+        #SEMAPHORE.release()
+
+        if max_step and total_step >= max_step:
+          break
+
+        '''
+        if timesteps[0].last():
+          total_episode += 1
+          if timesteps[0].reward > 0:
+            win = True
+          else:
+            None
+          break
+        '''
+    except KeyboardInterrupt:
+      print("thread-{} SC2_1V1 exception".format(thread_id))
+    finally:
+      end_time = time.time() - start_time
+    print("thread-{} exit, game over, result={}".format(thread_id, win))
+    if save_replay:
+      env.save_replay()
+    env.close()
+
 
   def _setup_game_thread(self):
     thread_count = 0
