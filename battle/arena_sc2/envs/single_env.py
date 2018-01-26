@@ -160,6 +160,7 @@ class SingleEnv(environment.Base):
     #  c.step(self._step_mul)
     print('----step obs----, uuid=', self._uid)
     self._obs = [self.controller.observe()]
+    self.controller.step(self._step_mul)
     print('----step recv obs rsp----, uuid=', self._uid)
     agent_obs = [self._features.transform_obs(o.observation) for o in self._obs]
     return agent_obs
@@ -170,7 +171,7 @@ class SingleEnv(environment.Base):
     #if self._state == environment.StepType.LAST:
     #  return self.reset()
     print('SingleEnv step, uuid=', self._uid)
-    self.step_action(actions)
+    #self.step_action(actions)
     self._state = environment.StepType.MID
     return self._step()
 
@@ -284,9 +285,6 @@ class SingleEnv(environment.Base):
     self._last_score = [0] * 2
     self._state = environment.StepType.FIRST
 
-  @sw.decorate
-  def first_step(self):
-    return self._step()
 
   @property
   def host(self):
@@ -316,8 +314,50 @@ class SingleEnv(environment.Base):
     print("get game_info, uuid=", self._uid)
     self._obs = None
     self._state = environment.StepType.LAST  # Want to jump to `reset`.
-    self.feature()
+    #self.feature()
     #self.renderer()
 
     self._last_score = [0] * 2
     self._state = environment.StepType.FIRST
+
+  def step_action_test(self, actions):
+    '''
+    controller_count = 0
+    for c in self._controllers:
+      print('controller-{} act'.format(controller_count))
+      [c.act(self._features.transform_action(o.observation, a, True))
+          for o, a in zip(self._obs, actions)]
+      controller_count += 1
+    '''
+    print('----step_test action----, uuid=', self._uid)
+    #self.controller.step(self._step_mul)
+    [self.controller.act(self._features.transform_action(o.observation, a, True))
+        for o, a in zip(self._obs, actions)]
+    print('----step_test recv action rsp----, uuid=', self._uid)
+
+  def step_obs_test(self):
+    #for c in self._controllers:
+    #  c.step(self._step_mul)
+    print('----step_test obs----, uuid=', self._uid)
+    self._obs = [self.controller.observe()]
+    self.controller.step(self._step_mul)
+    print('----step_test recv obs rsp----, uuid=', self._uid)
+    #agent_obs = [self._features.transform_obs(o.observation) for o in self._obs]
+    #return agent_obs
+
+  @sw.decorate
+  def first_step(self):
+    self.step_obs_test()
+    return tuple(environment.TimeStep(step_type=self._state,
+                                      reward=0,
+                                      discount=0, observation=None))
+
+  @sw.decorate
+  def step_test(self, actions):
+    self._state = environment.StepType.MID
+    #self.step_action_test(actions)
+    self.step_obs_test()
+    return tuple(environment.TimeStep(step_type=self._state,
+                                      reward=0,
+                                      discount=0, observation=None))
+

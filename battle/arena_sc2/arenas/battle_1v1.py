@@ -160,6 +160,12 @@ class Battle1V1:
     self._c1_bport = portpicker.pick_unused_port()
     self._c2_gport = portpicker.pick_unused_port()
     self._c2_bport = portpicker.pick_unused_port()
+    print("share_port={}\n server_game_port={}\n server_base_port={}\n".format(
+          self._share_port, self._svr_gport, self._svr_bport))
+    print("client1_game_port={}\n client1_base_port={}\n".format(
+          self._c1_gport, self._c1_bport))
+    print("client2_game_port={}\n client2_base_port={}\n".format(
+          self._c2_gport, self._c2_bport))
 
   def return_port(self):
     portpicker.return_port(self._share_port)
@@ -253,7 +259,7 @@ class Battle1V1:
     print('env_num=', len(self._envs), 'agent_num=', len(self._agents))
     for agent, env in zip(self._agents, self._envs):
       env.set_uuid(thread_count)
-      t = threading.Thread(target=Battle1V1.run_team, args=(thread_count, agent, env, max_step, save_replay))
+      t = threading.Thread(target=Battle1V1.run_team_sequence, args=(thread_count, agent, env, max_step, save_replay))
       threads.append(t)
       t.start()
       thread_count += 1
@@ -302,14 +308,14 @@ class Battle1V1:
 
   @staticmethod
   def run_team_sequence(thread_id, agent, env, max_step, save_replay=False):
-    print('thread-{} enter run_team'.format(thread_id))
+    print('thread-{} enter run_team_sequence'.format(thread_id))
     total_step = 0
     start_time = time.time()
 
     win = False
     try:
       """episode loop """
-      print('setup game by run_team')
+      print('setup game by run_team_sequence')
       env.reset_launch()
       if env.host:
         print('host create game, thread-{}'.format(thread_id))
@@ -344,7 +350,7 @@ class Battle1V1:
         print("--thread-{} step={}--".format(thread_id, total_step))
         #SEMAPHORE.acquire()
         actions = [agent.step(timestep) for timestep in timesteps]
-        timesteps = env.step(actions)
+        timesteps = env.step_test(actions)
         #SEMAPHORE.release()
 
         if max_step and total_step >= max_step:

@@ -19,7 +19,7 @@ def run_agent_vs_agent(unused_argv):
   print("**register env**")
   print("**play game**")
   sc2_battle.play_n(500)
-  time.sleep(20)
+  time.sleep(2)
 
 if __name__ == '__main__':
   app.run(run_agent_vs_agent)
